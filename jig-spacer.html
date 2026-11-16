@@ -103,7 +103,7 @@
     <div>
       <a class="back mono" href="index.html">← Auto-Modeler</a>
       <h1>Parametric jig spacer generator</h1>
-      <div class="sub">Plate arms that hold each section at height in the welding jig: set the section and its height, get the cut profile.</div>
+      <div class="sub">3D-printed arms that hold each section at height in the welding jig: set the section and its height, get the printable profile.</div>
     </div>
   </div>
 </header>
@@ -130,11 +130,11 @@
         </div>
         <div class="field"><label for="h">Height off jig surface <span class="u">mm</span></label><input id="h" type="number" step="0.5"><input type="range" data-link="h" min="5" max="400" step="0.5"></div>
 
-        <div class="grp mono">Spacer plate</div>
+        <div class="grp mono">Spacer body</div>
         <div class="field"><label for="cap">Cradle depth <span class="u">% of section</span></label><input id="cap" type="number" step="1"><input type="range" data-link="cap" min="25" max="100" step="1"></div>
-        <div class="field" data-for="rect"><label for="clr">Fit clearance, per side <span class="u">mm</span></label><input id="clr" type="number" step="0.05"><input type="range" data-link="clr" min="0" max="2" step="0.05"></div>
+        <div class="field"><label for="clr">Fit clearance, per side <span class="u">mm</span></label><input id="clr" type="number" step="0.05"><input type="range" data-link="clr" min="0" max="2" step="0.05"></div>
         <div class="field"><label for="wall">Arm width <span class="u">mm</span></label><input id="wall" type="number" step="0.5"><input type="range" data-link="wall" min="3" max="40" step="0.5"></div>
-        <div class="field"><label for="tp">Plate thickness <span class="u">mm</span></label><input id="tp" type="number" step="0.1"><input type="range" data-link="tp" min="1.5" max="12.7" step="0.1"></div>
+        <div class="field"><label for="tp">Extruded depth <span class="u">mm</span></label><input id="tp" type="number" step="1"><input type="range" data-link="tp" min="5" max="150" step="1"></div>
         <div class="field"><label for="tw">Locating tab width <span class="u">mm</span></label><input id="tw" type="number" step="0.5"><input type="range" data-link="tw" min="5" max="120" step="0.5"></div>
         <div class="field"><label for="td">Tab depth (jig plate) <span class="u">mm</span></label><input id="td" type="number" step="0.1"><input type="range" data-link="td" min="0" max="20" step="0.1"></div>
         <div class="msg" id="msg" role="status"></div>
@@ -149,7 +149,7 @@
       <h2>Spacer table <button class="btn sm" type="button" id="copyCsv">Copy CSV</button></h2>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Part</th><th>Holds</th><th>CL ht</th><th>Plate</th><th></th></tr></thead>
+          <thead><tr><th>Part</th><th>Holds</th><th>CL ht</th><th>Depth</th><th></th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
@@ -169,11 +169,11 @@
     </div>
 
     <div class="lower">
-      <div class="sheet" id="sheet" aria-label="Generated cut drawing"></div>
+      <div class="sheet" id="sheet" aria-label="Generated spacer drawing"></div>
       <div class="panel props">
         <h2>Spacer properties <button class="btn sm" type="button" id="copyDxf">Copy DXF</button></h2>
         <dl id="props"></dl>
-        <div class="note">Round sections sit in a 90° V-notch, so the centreline height holds regardless of fit; rectangular sections sit in a square pocket with the clearance shown. Mass assumes steel plate at 7850 kg/m³. Copy DXF puts the cut profile on the clipboard as DXF text (1:1, mm) to paste into a .dxf file.</div>
+        <div class="note">Round sections sit in a circular cradle and rectangular sections in a square pocket, each opened up by the fit clearance; the seat stays at the section underside so the centreline height holds. Mass assumes solid PLA at 1.24 g/cm³, so a print with partial infill will be lighter. Copy DXF puts the profile on the clipboard as DXF text (1:1, mm) to paste into a .dxf file and extrude in CAD.</div>
       </div>
     </div>
   </div>
@@ -185,20 +185,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ---------- Data ---------- */
 let rows = [
-  {part:'JS-01', shape:'round', D:33.4, H:33.4, B:33.4, ref:'cl',  h:75,  cap:50, clr:0.25, wall:10, tp:3.2, tw:30, td:6.4},
-  {part:'JS-02', shape:'round', D:42.2, H:42.2, B:42.2, ref:'cl',  h:120, cap:50, clr:0.25, wall:10, tp:3.2, tw:40, td:6.4},
-  {part:'JS-03', shape:'rect',  D:38.1, H:38.1, B:38.1, ref:'cl',  h:75,  cap:50, clr:0.25, wall:10, tp:3.2, tw:30, td:6.4},
-  {part:'JS-04', shape:'rect',  D:50.8, H:50.8, B:25.4, ref:'bot', h:150, cap:60, clr:0.25, wall:12, tp:4.8, tw:25, td:6.4},
-  {part:'JS-05', shape:'round', D:26.7, H:26.7, B:26.7, ref:'cl',  h:200, cap:50, clr:0.25, wall:12, tp:4.8, tw:30, td:6.4},
+  {part:'JS-01', shape:'round', D:33.4, H:33.4, B:33.4, ref:'cl',  h:75,  cap:50, clr:0.25, wall:10, tp:40, tw:30, td:6.4},
+  {part:'JS-02', shape:'round', D:42.2, H:42.2, B:42.2, ref:'cl',  h:120, cap:50, clr:0.25, wall:10, tp:40, tw:40, td:6.4},
+  {part:'JS-03', shape:'rect',  D:38.1, H:38.1, B:38.1, ref:'cl',  h:75,  cap:50, clr:0.25, wall:10, tp:40, tw:30, td:6.4},
+  {part:'JS-04', shape:'rect',  D:50.8, H:50.8, B:25.4, ref:'bot', h:150, cap:60, clr:0.25, wall:12, tp:40, tw:25, td:6.4},
+  {part:'JS-05', shape:'round', D:26.7, H:26.7, B:26.7, ref:'cl',  h:200, cap:50, clr:0.25, wall:12, tp:40, tw:30, td:6.4},
 ];
 let cur = 0;
 let p = {...rows[0]};
-const RHO = 7850e-9; // kg/mm³
+const RHO = 1240e-9; // kg/mm³, solid PLA
 const $ = id => document.getElementById(id);
 const f1 = x => (Math.round(x*10)/10).toString();
 
 /* ---------- Spacer geometry ---------- */
-// Plate profile in its own plane: x across the jig, y up from the jig surface (y = 0).
+// Spacer profile, extruded along the member: x across the jig, y up from the jig surface (y = 0).
 // The tab projects below y = 0 into a slot in the jig plate.
 function geom(q){
   const round = q.shape==='round';
@@ -206,11 +206,16 @@ function geom(q){
   const yc = q.ref==='cl' ? q.h : q.h + H/2;       // section centreline height
   const seat = yc - H/2;                           // underside of section
   const top = seat + q.cap/100*H;                  // top of arms
-  let notch, open, low, W;
+  let notch, open, low, W, rc = 0;
   if(round){
-    const yv = yc - (q.D/2)*Math.SQRT2;            // 90° V: vertex sits R·√2 below the centre
-    open = 2*(top - yv); low = yv; W = open + 2*q.wall;
-    notch = [[open/2,top],[0,yv],[-open/2,top]];
+    // Circular cradle of radius R + clearance, lowest point at the section underside.
+    // Above the arc centre the walls run straight up so the tube can still drop in.
+    const Rc = q.D/2 + q.clr, ya = seat + Rc, n = 36;
+    const a0 = Math.asin(Math.min(1, Math.max(0, (ya - top)/Rc)));
+    open = 2*Rc*Math.cos(a0); low = seat; W = open + 2*q.wall; rc = Rc;
+    notch = top > ya ? [[Rc,top]] : [];
+    for(let i=0;i<=n;i++){ const a = -a0 - (Math.PI - 2*a0)*i/n; notch.push([Rc*Math.cos(a), ya + Rc*Math.sin(a)]); }
+    if(top > ya) notch.push([-Rc,top]);
   } else {
     open = B + 2*q.clr; low = seat; W = open + 2*q.wall;
     notch = [[open/2,top],[open/2,seat],[-open/2,seat],[-open/2,top]];
@@ -219,15 +224,13 @@ function geom(q){
   pts = pts.filter((a,i)=>{ const b = pts[(i+1)%pts.length]; return Math.hypot(a[0]-b[0],a[1]-b[1]) > 1e-6; });
   let A = 0, P = 0;
   pts.forEach((a,i)=>{ const b = pts[(i+1)%pts.length]; A += a[0]*b[1]-b[0]*a[1]; P += Math.hypot(a[0]-b[0],a[1]-b[1]); });
-  return {round, H, B, yc, seat, top, open, low, W, pts, A:Math.abs(A)/2, P, yTop:Math.max(top, yc+H/2)};
+  return {round, H, B, yc, seat, top, open, low, W, rc, pts, A:Math.abs(A)/2, P, yTop:Math.max(top, yc+H/2)};
 }
 function check(q){
-  if(!(q.tp>0)) return 'Plate thickness must be positive.';
+  if(!(q.tp>0)) return 'Extruded depth must be positive.';
   if(!(q.wall>=2)) return 'Arm width must be at least 2 mm.';
   const g = geom(q);
-  if(g.low < 3) return g.round
-    ? 'Too low for this diameter: the V-notch would cut through to the jig surface. Raise the height.'
-    : 'Too low: less than 3 mm of plate under the section. Raise the height.';
+  if(g.low < 3) return 'Too low: less than 3 mm of material under the section. Raise the height.';
   if(q.tw > g.W) return `Locating tab is wider than the spacer (${f1(g.W)} mm).`;
   return '';
 }
@@ -271,7 +274,7 @@ function resize(){
   renderer.setSize(w,h,false); camera.aspect = w/h; camera.updateProjectionMatrix();
 }
 const toShape = pts => { const s = new THREE.Shape(); pts.forEach(([x,y],i)=> i ? s.lineTo(x,y) : s.moveTo(x,y)); s.closePath(); return s; };
-const stubLen = g => Math.max(160, g.W*2.2);
+const stubLen = g => Math.max(160, g.W*2.2, p.tp*2.5);
 
 function updateModel(q, g, refit){
   if(!gl) return;
@@ -279,7 +282,7 @@ function updateModel(q, g, refit){
   group = new THREE.Group();
   const Ls = stubLen(g);
 
-  // Spacer plate
+  // Spacer body
   const pg = new THREE.ExtrudeGeometry(toShape(g.pts), {depth:q.tp, bevelEnabled:false});
   pg.translate(0,0,-q.tp/2);
   group.add(new THREE.Mesh(pg, new THREE.MeshStandardMaterial({color:0xb4bcc9, metalness:.25, roughness:.45, side:THREE.DoubleSide})));
@@ -319,7 +322,7 @@ document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click'
 const holdsLabel = q => q.shape==='round' ? `HSS Ø${f1(q.D)}` : `HSS ${f1(q.H)} × ${f1(q.B)}`;
 function drawing(q, g){
   const W = 800, VH = 420, cx = 250, sx = 610, yb = 272;
-  const k = Math.min(250/g.W, 205/(g.yTop + q.td), 4);
+  const k = Math.min(250/g.W, 205/(g.yTop + q.td), 150/q.tp, 4);
   const X = x => cx + x*k, Y = y => yb - (y + q.td)*k;
   const dimH = (xa,xb,y,label,refA,refB) => `
     <line x1="${xa}" y1="${refA}" x2="${xa}" y2="${y+5*Math.sign(y-refA)}" class="ext"/>
@@ -335,8 +338,8 @@ function drawing(q, g){
   const poly = g.pts.map(([x,y])=>`${X(x)},${Y(y)}`).join(' ');
   const ghost = 'M' + ghostLoops(g).outer.map(([x,y])=>`${X(x)},${Y(y+g.yc)}`).join('L') + 'Z';
   const xl = X(-g.W/2), xr = X(g.W/2), hw = q.tp*k/2;
-  const mass = g.A*q.tp*RHO;
-  const lowLabel = g.round ? `${f1(g.low)} V` : `${f1(g.low)} SEAT`;
+  const mass = g.A*q.tp*RHO*1000;
+  const lowLabel = `${f1(g.low)} SEAT`;
 
   return `<svg viewBox="0 0 ${W} ${VH}" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
   <defs>
@@ -384,7 +387,7 @@ function drawing(q, g){
 
   <g transform="translate(6,${VH-66})">
     <rect x="0" y="0" width="${W-12}" height="60" class="tb"/>
-    ${[['PART',q.part||'—',0,110],['HOLDS',holdsLabel(q),110,300],['CRADLE',g.round?'90° V-notch':`Pocket ${f1(g.open)}`,300,440],['PLATE',`${f1(q.tp)} · ${f1(g.W)} × ${f1(g.top+q.td)}`,440,650],['MASS',`${mass.toFixed(3)} kg`,650,W-12]]
+    ${[['PART',q.part||'—',0,110],['HOLDS',holdsLabel(q),110,300],['CRADLE',g.round?`Arc R${f1(g.rc)}`:`Pocket ${f1(g.open)}`,300,430],['BODY W × H × D',`${f1(g.W)} × ${f1(g.top+q.td)} × ${f1(q.tp)}`,430,660],['MASS (PLA)',`${mass.toFixed(0)} g`,660,W-12]]
       .map(([k1,v,a,b])=>`<line x1="${b}" y1="0" x2="${b}" y2="60" stroke="#14213d" stroke-width="${b===W-12?0:1}"/><text x="${a+10}" y="20" class="tk">${k1}</text><text x="${a+10}" y="42" class="tv">${v}</text>`).join('')}
   </g>
   <text x="${W-14}" y="${VH-76}" class="lbl" text-anchor="end">ALL DIMENSIONS IN mm · NTS</text>
@@ -396,12 +399,12 @@ function propsHTML(q,g){
   const list = [
     ['Section centreline height', `${f1(g.yc)} mm`],
     ['Section underside height', `${f1(g.seat)} mm`],
-    [g.round ? 'V-notch vertex height' : 'Pocket seat height', `${f1(g.low)} mm`],
-    [g.round ? 'V opening at top' : 'Pocket width', `${f1(g.open)} mm`],
+    [g.round ? 'Cradle radius' : 'Pocket width', `${f1(g.round ? g.rc : g.open)} mm`],
+    ['Cradle opening at top', `${f1(g.open)} mm`],
     ['Top of arms', `${f1(g.top)} mm`],
-    ['Plate blank, W × H', `${f1(g.W)} × ${f1(g.top+q.td)} mm`],
-    ['Cut length', `${g.P.toFixed(0)} mm`],
-    ['Plate mass', `${(g.A*q.tp*RHO*1000).toFixed(0)} g`],
+    ['Body, W × H × D', `${f1(g.W)} × ${f1(g.top+q.td)} × ${f1(q.tp)} mm`],
+    ['Volume', `${(g.A*q.tp/1000).toFixed(1)} cm³`],
+    ['Mass, solid PLA', `${(g.A*q.tp*RHO*1000).toFixed(0)} g`],
   ];
   return list.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
 }
@@ -428,7 +431,7 @@ function refresh(refit){
   updateModel(p, g, refit);
   $('sheet').innerHTML = drawing(p, g);
   $('props').innerHTML = propsHTML(p, g);
-  $('hud').textContent = `${p.part||''}  ${holdsLabel(p)} @ ${f1(g.yc)} mm CL · ${f1(p.tp)} mm plate`;
+  $('hud').textContent = `${p.part||''}  ${holdsLabel(p)} @ ${f1(g.yc)} mm CL · ${f1(p.tp)} mm deep`;
 }
 keys.forEach(k=>{
   const num = $(k), rng = document.querySelector(`[data-link="${k}"]`);
@@ -468,7 +471,7 @@ async function copy(btn, text, label){
   setTimeout(()=>btn.textContent=label,1500);
 }
 $('copyCsv').addEventListener('click', e=>{
-  const csv = ['Part,Shape,D,H,B,Height ref,Height,CL height,Cradle %,Clearance,Arm width,Plate t,Tab width,Tab depth,Blank W,Blank H',
+  const csv = ['Part,Shape,D,H,B,Height ref,Height,CL height,Cradle %,Clearance,Arm width,Depth,Tab width,Tab depth,Blank W,Blank H',
     ...rows.map(r=>{ const g = geom(r); return [r.part,r.shape,r.D,r.H,r.B,r.ref==='cl'?'centreline':'underside',r.h,f1(g.yc),r.cap,r.clr,r.wall,r.tp,r.tw,r.td,f1(g.W),f1(g.top+r.td)].join(','); })].join('\n');
   copy(e.currentTarget, csv, 'Copy CSV');
 });
